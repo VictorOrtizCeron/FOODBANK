@@ -6,4 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FOODBANK.API\FOODBANK.API.csproj" />
+    <ProjectReference Include="..\FOODBANK.Architecture\FOODBANK.Architecture.csproj" />
+    <ProjectReference Include="..\FOODBANK.Business\FOODBANK.Business.csproj" />
+    <ProjectReference Include="..\FOODBANK.Data\FOODBANK.Data.csproj" />
+    <ProjectReference Include="..\FOODBANK.Models\FOODBANK.Models.csproj" />
+  </ItemGroup>
+
 </Project>
