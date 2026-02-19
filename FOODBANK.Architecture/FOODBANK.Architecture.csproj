@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FOODBANK.Data\FOODBANK.Data.csproj" />
     <ProjectReference Include="..\FOODBANK.Models\FOODBANK.Models.csproj" />
   </ItemGroup>
 
