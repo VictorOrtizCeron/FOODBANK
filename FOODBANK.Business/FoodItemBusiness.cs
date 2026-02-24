@@ -15,8 +15,7 @@ public class FoodItemBusiness(IFoodItemRepository foodItemRepository) : IFoodIte
 {
     public async Task<bool> CreateFoodItemAsync(FoodItem item)
     {
-        // Mantener la misma lógica mínima de APW.Business: passthrough
-        // Aquí podrías añadir validaciones específicas si lo deseas.
+
         return await foodItemRepository.CreateAsync(item);
     }
 

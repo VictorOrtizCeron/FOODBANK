@@ -1,66 +1,126 @@
-﻿using FOODBANK.Data.Context;
-using Microsoft.EntityFrameworkCore;
-
+﻿using Microsoft.EntityFrameworkCore;
+using FOODBANK.Models;
+using FOODBANK.Data.Context;
+using FOODBANK.Data;
 
 namespace FOODBANK.Data.Repositories;
 
-public abstract class RepositoryBase<T> where T : class
+public interface IRepositoryBase<T>
 {
-    protected readonly FoodbankDbContext _context;
-    protected readonly DbSet<T> _dbSet;
 
-    protected RepositoryBase(FoodbankDbContext context)
+    Task<bool> UpsertAsync(T entity, bool isUpdating);
+
+    Task<bool> CreateAsync(T entity);
+
+    Task<bool> DeleteAsync(T entity);
+
+    Task<IEnumerable<T>> ReadAsync();
+
+    Task<T> FindAsync(int id);
+
+    Task<bool> UpdateAsync(T entity);
+
+    Task<bool> UpdateManyAsync(IEnumerable<T> entities);
+
+    Task<bool> ExistsAsync(T entity);
+}
+
+public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
+{
+    private readonly FoodbankDbContext _context;
+    protected FoodbankDbContext DbContext => _context;
+    protected DbSet<T> DbSet;
+
+    public RepositoryBase(FoodbankDbContext context)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _dbSet = _context.Set<T>();
+        _context = context;
+        DbSet = _context.Set<T>();
     }
 
-    public virtual async Task<bool> UpsertAsync(T entity, bool isUpdating)
+    public async Task<bool> UpsertAsync(T entity, bool isUpdating)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
-        return isUpdating ? await UpdateAsync(entity) : await CreateAsync(entity);
+        return isUpdating
+            ? await UpdateAsync(entity)
+            : await CreateAsync(entity);
     }
 
-    public virtual async Task<bool> CreateAsync(T entity)
+    public async Task<bool> CreateAsync(T entity)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
-        await _dbSet.AddAsync(entity);
-        return await SaveAsync();
+        try
+        {
+            await _context.AddAsync(entity);
+            return await SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
-    public virtual async Task<IEnumerable<T>> ReadAsync()
+    public async Task<bool> UpdateAsync(T entity)
     {
-        return await _dbSet.AsNoTracking().ToListAsync();
+        try
+        {
+            _context.Update(entity);
+            return await SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
-    public virtual async Task<T?> FindAsync(int id)
+    public async Task<bool> UpdateManyAsync(IEnumerable<T> entities)
     {
-        var found = await _dbSet.FindAsync(id);
-        return found is null ? null : found;
+        try
+        {
+            _context.UpdateRange(entities);
+            return await SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
-    public virtual async Task<bool> UpdateAsync(T entity)
+    public async Task<bool> DeleteAsync(T entity)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
-        _dbSet.Update(entity);
-        return await SaveAsync();
+        try
+        {
+            _context.Remove(entity);
+            return await SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
-    public virtual async Task<bool> UpdateManyAsync(IEnumerable<T> entities)
+    public async Task<IEnumerable<T>> ReadAsync()
     {
-        if (entities == null) throw new ArgumentNullException(nameof(entities));
-        _dbSet.UpdateRange(entities);
-        return await SaveAsync();
+        try
+        {
+            return await _context.Set<T>().ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
-    public virtual async Task<bool> DeleteAsync(T entity)
+    public async Task<T> FindAsync(int id)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
-        _dbSet.Remove(entity);
-        return await SaveAsync();
+        try
+        {
+            return await _context.Set<T>().FindAsync(id);
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
-    public virtual async Task<bool> ExistsAsync(T entity)
+    public async Task<bool> ExistsAsync(T entity)
     {
         try
         {
@@ -75,6 +135,8 @@ public abstract class RepositoryBase<T> where T : class
 
     protected async Task<bool> SaveAsync()
     {
-        return await _context.SaveChangesAsync() > 0;
+        var result = await _context.SaveChangesAsync();
+        return result > 0;
     }
+
 }
